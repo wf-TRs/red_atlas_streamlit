@@ -38,7 +38,7 @@ def clean_data():
 
     # Step 1: Connect to your SQLite database (use the same file name you used before)
     conn = sqlite3.connect("repid.db")  # This creates or opens the .db file
-    repid_df_cleaned.to_sql('Repid', conn, if_exists = "append", index = False)
+    repid_df_cleaned.to_sql('Repid', conn, if_exists = "replace", index = False)
 
     repids_from_db = pd.read_sql_query("SELECT RepID, RepidName FROM Repid", conn)
 
