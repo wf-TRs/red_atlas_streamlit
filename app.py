@@ -24,8 +24,6 @@ def clean_data():
     repid_df = pd.read_excel('repid.xlsx')
     repid_df_cleaned = repid_df.drop(columns=["DiseaseName"])
 
-    # Drop duplicate RepidName entries, keeping the first occurrence
-    repid_df_cleaned = repid_df_cleaned.drop_duplicates(subset="RepidName", keep="first").reset_index(drop=True)
     repid_df_cleaned['Link'] = repid_df_cleaned.apply(create_links, axis=1)
 
     disease_df = repid_df[['RepidName', 'DiseaseName']]
