@@ -6,6 +6,12 @@ from folium.plugins import MarkerCluster
 from folium import Popup
 from streamlit.components.v1 import html
 import requests
+from load_database import clean_data
+import os
+
+if not os.path.exists("repid.db"):
+    clean_data()
+
 
 st.set_page_config(layout="wide")
 
