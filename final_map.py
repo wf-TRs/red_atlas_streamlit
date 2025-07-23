@@ -17,8 +17,8 @@ st.set_page_config(layout="wide")
 
 def load_summary_table(table_name):
     tsv_files = {
-    "Summary Table": "summary_all.tsv",
-    "Population Table": "all_REDatlas.tsv"}
+        "Summary Table": "summary_all.tsv",
+        "Population Table": "all_REDatlas.tsv"}
     filename = tsv_files[table_name]
     summary_path = os.path.join(filename)
     if os.path.exists(summary_path):
@@ -115,17 +115,12 @@ with col1:
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
-    table_options = ["Choose a table", "Summary Table", "Population Table"]
+    table_options = ["Summary Table", "Population Table"]
     selected_table = st.selectbox("Tables:", table_options)
+    
+    
 
-    if selected_table != "Choose a table":
-        tsv_files = {
-            "Summary Table": "summary_all.tsv",
-            "Population Table": "all_REDatlas.tsv"
-        }
-        display_table = tsv_files[selected_table]
-    else:
-        display_table = []
+    
     
 
 st.markdown("---")
@@ -220,6 +215,6 @@ if final_repids or final_diseases:
 else:
     st.info("Please select a Repid, Disease, or enter a search term.")
 
-if display_table:
-    summary_df = load_summary_table(display_table)
+if selected_table:
+    summary_df = load_summary_table(selected_table)
     st.dataframe(summary_df, use_container_width=True)
