@@ -19,7 +19,8 @@ def load_summary_table(table_name):
     tsv_files = {
         "Summary Table": "summary_all.tsv",
         "Population Table": "all_REDatlas.tsv"}
-    filename = tsv_files[table_name]
+    filename = tsv_files.get(table_name)
+
     summary_path = os.path.join(filename)
     if os.path.exists(summary_path):
         return pd.read_csv(summary_path, sep="\t")
