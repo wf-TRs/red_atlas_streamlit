@@ -115,11 +115,15 @@ with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
     table_options = ["Choose options", "Summary Table", "Population Table"]
-    selected_table = st.selectbox("Tables:", table_options)
+    selected_table = st.selectbox("Tables:", table_options, index=0)
     
-    
+    if selected_table != "Choose options":
+        summary_df = load_summary_table(selected_table)
+        if summary_df is not None:
+            st.dataframe(summary_df, use_container_width=True)
+        else:
+            st.warning("Selected table not found.")
 
-    
     
 
 st.markdown("---")
@@ -213,7 +217,3 @@ if final_repids or final_diseases:
         html(m._repr_html_(), height=800, width=1400)
 else:
     st.info("Please select a Repid, Disease, or enter a search term.")
-
-if selected_table:
-    summary_df = load_summary_table(selected_table)
-    st.dataframe(summary_df, use_container_width=True)
