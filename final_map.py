@@ -117,7 +117,7 @@ with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
     tsv_files = ["Summary Table", "Population Table"]
-    selected_table = st.selectbox("View TSV Table:", tsv_files)
+    selected_table = st.selectbox("View TSV Table:", list(tsv_files))
 
 st.markdown("---")
 
