@@ -115,7 +115,16 @@ with col1:
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
-    selected_table = st.selectbox("Choose Table:", ["Summary Table", "Population Table"])
+    table_options = ["Choose a table", "Summary Table", "Population Table"]
+    selected_table = st.selectbox("Tables:", table_options)
+
+    if selected_table != "Choose a table":
+        tsv_files = {
+            "Summary Table": "summary_all.tsv",
+            "Population Table": "all_REDatlas.tsv"
+        }
+        display_table = tsv_files[selected_table]
+    
 
 st.markdown("---")
 
@@ -209,6 +218,6 @@ if final_repids or final_diseases:
 else:
     st.info("Please select a Repid, Disease, or enter a search term.")
 
-if selected_table:
-    summary_df = load_summary_table(selected_table)
+if display_table:
+    summary_df = load_summary_table(display_table)
     st.dataframe(summary_df, use_container_width=True)
