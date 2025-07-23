@@ -16,7 +16,7 @@ if not os.path.exists("repid.db"):
 st.set_page_config(layout="wide")
 
 def load_summary_table(table_name):
-    if table_name == 'summary_all.tsv':
+    if table_name == 'Summary Table':
         name = "summary_all.tsv"
     else:
         name = "all_REDatlas.tsv"
@@ -117,7 +117,7 @@ with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
     tsv_files = ["Summary Table", "Population Table"]
-    select_table = st.multiselect("Select Table", tsv_files)
+    selected_table = st.multiselect("Select Table", tsv_files)
 
 st.markdown("---")
 
@@ -211,6 +211,6 @@ if final_repids or final_diseases:
 else:
     st.info("Please select a Repid, Disease, or enter a search term.")
 
-if select_table:
-    summary_df = load_summary_table(select_table)
+if selected_table:
+    summary_df = load_summary_table(selected_table)
     st.dataframe(summary_df, use_container_width=True)
