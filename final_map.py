@@ -23,8 +23,6 @@ def load_summary_table(table_name):
     summary_path = os.path.join(filename)
     if os.path.exists(summary_path):
         return pd.read_csv(summary_path, sep="\t")
-    else:
-        return pd.DataFrame(columns=["No summary file found"])
     
 # --- DB Connection ---
 def assign_colors(df,name):
@@ -115,7 +113,7 @@ with col1:
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
-    table_options = ["Summary Table", "Population Table"]
+    table_options = ["Choose options", "Summary Table", "Population Table"]
     selected_table = st.selectbox("Tables:", table_options)
     
     
