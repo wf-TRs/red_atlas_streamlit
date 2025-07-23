@@ -15,6 +15,18 @@ if not os.path.exists("repid.db"):
 
 st.set_page_config(layout="wide")
 
+def load_summary_table(table_name):
+    if table_name == 'summary_all.tsv':
+        name = "summary_all.tsv"
+    else:
+        name = "all_REDatlas.tsv"
+
+    summary_path = os.path.join(name)
+    if os.path.exists(summary_path):
+        return pd.read_csv(summary_path, sep="\t")
+    else:
+        return pd.DataFrame(columns=["No summary file found"])
+    
 # --- DB Connection ---
 def assign_colors(df,name):
     names = df[name].dropna().unique()
@@ -97,13 +109,15 @@ disease_options = pd.read_sql_query("SELECT DISTINCT DiseaseName FROM Disease", 
 conn.close()
 
 # --- Inputs ---
-col1, col2,col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     selected_repids = st.multiselect("Select Repid(s):", sorted(repid_options))
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
-
+with col3:
+    tsv_files = ["Summary Table", "Population Table"]
+    select_table = st.multiselect("Select Table", tsv_files)
 
 st.markdown("---")
 
@@ -197,3 +211,6 @@ if final_repids or final_diseases:
 else:
     st.info("Please select a Repid, Disease, or enter a search term.")
 
+if select_table:
+    summary_df = load_summary_table(select_table)
+    st.dataframe(summary_df, use_container_width=True)
