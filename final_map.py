@@ -124,6 +124,8 @@ with col3:
             "Population Table": "all_REDatlas.tsv"
         }
         display_table = tsv_files[selected_table]
+    else:
+        display_table = []
     
 
 st.markdown("---")
