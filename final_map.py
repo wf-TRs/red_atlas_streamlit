@@ -16,12 +16,11 @@ if not os.path.exists("repid.db"):
 st.set_page_config(layout="wide")
 
 def load_summary_table(table_name):
-    if table_name == 'Summary Table':
-        name = "summary_all.tsv"
-    else:
-        name = "all_REDatlas.tsv"
-
-    summary_path = os.path.join(name)
+    tsv_files = {
+    "Summary Table": "summary_all.tsv",
+    "Population Table": "all_REDatlas.tsv"}
+    filename = tsv_files[table_name]
+    summary_path = os.path.join(filename)
     if os.path.exists(summary_path):
         return pd.read_csv(summary_path, sep="\t")
     else:
@@ -116,8 +115,7 @@ with col1:
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
-    tsv_files = ["Summary Table", "Population Table"]
-    selected_table = st.selectbox("View TSV Table:", list(tsv_files))
+    selected_table = st.selectbox("Choose Table:", ["Summary Table", "Population Table"])
 
 st.markdown("---")
 
