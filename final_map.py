@@ -1,4 +1,3 @@
-
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -11,6 +10,7 @@ from load_database import clean_data
 import os
 
 st.set_page_config(layout="wide")
+
 # --- Initialize DB ---
 def database_is_empty():
     try:
@@ -26,32 +26,32 @@ def database_is_empty():
 if database_is_empty():
     clean_data()
 
-
+# --- Load TSV table ---
 def load_summary_table(table_name):
     tsv_files = {
         "Summary Table": "summary_all.tsv",
-        "Population Table": "all_REDatlas.tsv"}
+        "Population Table": "all_REDatlas.tsv"
+    }
     filename = tsv_files.get(table_name)
+    if filename and os.path.exists(filename):
+        return pd.read_csv(filename, sep="\t")
+    return None
 
-    summary_path = os.path.join(filename)
-    if os.path.exists(summary_path):
-        return pd.read_csv(summary_path, sep="\t")
-# --- DB Connection ---
-def assign_colors(df,name):
-    names = df[name].dropna().unique()
-    
+# --- Assign colors to legend ---
+def assign_colors(df, name):
+    unique_names = df[name].dropna().unique()
     color_list = [
-        'red', 'blue', 'green', 'purple', 'orange', 'yellow', 'brown', "aquamarine",
+        'red', 'blue', 'green', 'purple', 'orange', 'yellow', 'brown', 'aquamarine',
         'darkred', 'lightred', 'beige', 'darkblue', 'lightblue', 'lightgreen',
         'darkgreen', 'cadetblue', 'darkpurple', 'pink', 'gray', 'black', 'lightgray',
         'cyan', 'magenta', 'navy', 'teal', 'coral', 'olive', 'gold', 'indigo'
     ]
-    sorted_names = sorted(names)
-    color_map = {name: color_list[i % len(color_list)] for i, name in enumerate(sorted_names)}
-    return color_map
+    sorted_names = sorted(unique_names)
+    return {name: color_list[i % len(color_list)] for i, name in enumerate(sorted_names)}
 
+# --- Display color legend ---
 def show_color_legend(color_map):
-    st.markdown("### Colors Legend", unsafe_allow_html=True)
+    st.markdown("### Color Legend")
     for name, color in color_map.items():
         st.markdown(
             f"<div style='display: flex; align-items: center;'>"
@@ -60,30 +60,28 @@ def show_color_legend(color_map):
             unsafe_allow_html=True
         )
 
+# --- SQL query builder ---
 def get_regions(repids, diseases):
     conn = sqlite3.connect("repid.db")
-    conditions = []
-    params = []
+    conditions, params = [], []
+
     if repids:
         placeholders = ','.join(['?'] * len(repids))
         conditions.append(f"re.RepidName IN ({placeholders})")
         params.extend(repids)
-        name= "RepidName"
-
+        name = "RepidName"
     elif diseases:
         placeholders = ','.join(['?'] * len(diseases))
         conditions.append(f"d.DiseaseName IN ({placeholders})")
         params.extend(diseases)
-        name= "DiseaseName"
-
-    if not conditions:
-        return pd.DataFrame()  # no input, return empty
+        name = "DiseaseName"
+    else:
+        return {}, "", pd.DataFrame()
 
     where_clause = ' OR '.join(conditions)
-
     sql = f"""
         SELECT DISTINCT r.Latitude, r.Longitude, d.DiseaseName, re.RepidName, re.Link, re.RepeatLocation, 
-               re.NormalRange, re.IntermediateRange, re.FullMutationRange, r.Frequency
+                        re.NormalRange, re.IntermediateRange, re.FullMutationRange, r.Frequency
         FROM Region r
         JOIN Repid re ON re.RepID = r.RepID
         JOIN Disease d ON d.RepID = re.RepID
@@ -91,14 +89,14 @@ def get_regions(repids, diseases):
     """
     df = pd.read_sql_query(sql, conn, params=params)
     conn.close()
-    color_map = assign_colors(df,name)
+    color_map = assign_colors(df, name)
+    return color_map, name, df
 
+# --- Marker radius function ---
+def marker_radius(freq):
+    return freq + 3.5 if pd.notna(freq) else 3
 
-
-    return color_map,name, df
-
-
-
+# --- Geo styling ---
 def style_function(feature):
     continent = feature['properties']['continent']
     return {
@@ -108,17 +106,16 @@ def style_function(feature):
         'fillOpacity': 0.5
     }
 
-# --- Streamlit UI ---
+# --- UI ---
 st.title("Disease Region Explorer")
 
 conn = sqlite3.connect("repid.db")
-repid_options = pd.read_sql_query("SELECT DISTINCT RepidName FROM Repid", conn)["RepidName"].dropna().unique().tolist()
-disease_options = pd.read_sql_query("SELECT DISTINCT DiseaseName FROM Disease", conn)["DiseaseName"].dropna().unique().tolist()
+repid_options = pd.read_sql_query("SELECT DISTINCT RepidName FROM Repid", conn)["RepidName"].dropna().tolist()
+disease_options = pd.read_sql_query("SELECT DISTINCT DiseaseName FROM Disease", conn)["DiseaseName"].dropna().tolist()
 conn.close()
 
-# --- Inputs ---
+# --- Controls ---
 col1, col2, col3, col4 = st.columns(4)
-
 with col1:
     selected_repids = st.multiselect("Select Repid(s):", sorted(repid_options))
 with col2:
@@ -126,99 +123,77 @@ with col2:
 with col3:
     search_text = st.text_input("Search by typing (use comma):")
 with col4:
-    table_options = ["Choose options", "Summary Table", "Population Table"]
-    selected_table = st.selectbox("Tables:", table_options, index=0)
-    
+    selected_table = st.selectbox("Tables:", ["Choose options", "Summary Table", "Population Table"], index=0)
 
-
-# --- Parse text input ---
-typed_repids = []
-typed_diseases = []
-
+# --- Parse search input ---
+typed_repids, typed_diseases = [], []
 if search_text:
-    parts = [x.strip() for x in search_text.split(',') if x.strip()]
-    for part in parts:
+    for part in [x.strip() for x in search_text.split(',') if x.strip()]:
         if part in repid_options:
             typed_repids.append(part)
         elif part in disease_options:
             typed_diseases.append(part)
 
-# Combine selected + typed
 final_repids = list(set(selected_repids + typed_repids))
 final_diseases = list(set(selected_diseases + typed_diseases))
 
-# --- Display results ---
+# --- Load GeoJSON ---
 url = "https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/refs/heads/main/countries.geojson"
 geojson_data = requests.get(url).json()
 
-# Define color map
+# --- Continent colors ---
 continent_colors = {
-    "Africa": "#90ee90",         # lightgreen
-    "Asia": "#ffcccb",           # lightred (light pinkish red)
-    "Europe": "#add8e6",         # lightblue
-    "North America": "#dab6fc",  # lightpurple (lavender)
-    "South America": "#ffd580",  # lightorange (peach)
-    "Oceania": "#ffb6c1",        # lightpink
-    "Antarctica": "#d3d3d3"      # lightgray
-
+    "Africa": "#90ee90",
+    "Asia": "#ffcccb",
+    "Europe": "#add8e6",
+    "North America": "#dab6fc",
+    "South America": "#ffd580",
+    "Oceania": "#ffb6c1",
+    "Antarctica": "#d3d3d3"
 }
 
-
-def radius(row):
-    if pd.notna(row["Frequency"]):
-        radius = row["Frequency"] + 3.5
-    else:
-        radius = 3
-    return radius
-
+# --- Main map logic ---
 if final_repids or final_diseases:
-    color_map,name, results = get_regions(final_repids, final_diseases)
-   
+    color_map, name, results = get_regions(final_repids, final_diseases)
     show_color_legend(color_map)
-    
 
     if results.empty:
         st.warning("No matching records found.")
     else:
-        m = folium.Map(location=[results['Latitude'].mean(), results['Longitude'].mean()], 
-                       zoom_start=2,
-                       min_zoom=2,
-                       max_bounds= True)
-        folium.GeoJson(
-            geojson_data,
-            style_function=style_function
-            ).add_to(m)
+        m = folium.Map(location=[results['Latitude'].mean(), results['Longitude'].mean()],
+                       zoom_start=2, min_zoom=2, max_bounds=True)
+
+        folium.GeoJson(geojson_data, style_function=style_function).add_to(m)
         marker_cluster = MarkerCluster().add_to(m)
 
         for _, row in results.iterrows():
-            popup_content = f"""
-                <h3>{row['DiseaseName']}</h3>
-                <i>{row['RepidName']}</i> in {row['RepeatLocation']}<br>
-                <b>{row['Link']}</b><br>
-                <b>Normal Range:</b> {row['NormalRange']}<br>
-            """
+            popup_html = f"""
+                <div style='max-width: 300px;'>
+                    <h4>{row['DiseaseName']}</h4>
+                    <p><i>{row['RepidName']}</i> in {row['RepeatLocation']}<br>
+                    <b>Link:</b> {row['Link']}<br>
+                    <b>Normal Range:</b> {row['NormalRange']}<br>"""
             if row['IntermediateRange'] != "-":
-                popup_content += f" <b>Intermediate Range:</b> {row['IntermediateRange']}<br>"
-            if pd.notna("FullMUtationRange"):
-                popup_content += f" <b>Full Mutation Range:</b> {row['FullMutationRange']}"
-            radius(row)
+                popup_html += f"<b>Intermediate Range:</b> {row['IntermediateRange']}<br>"
+            if pd.notna(row['FullMutationRange']):
+                popup_html += f"<b>Full Mutation Range:</b> {row['FullMutationRange']}<br>"
+            popup_html += "</p></div>"
+
             folium.CircleMarker(
                 location=[row['Latitude'], row['Longitude']],
-                radius=radius(row),
-                color=color_map.get(row[name]),
+                radius=marker_radius(row["Frequency"]),
+                color=color_map.get(row[name], "gray"),
                 fill=True,
                 fill_opacity=0.7,
-                popup= Popup(popup_content, max_width=700),
-                tooltip=tooltip 
-            ).add_to(m)
-
-           
-        
+                popup=Popup(popup_html, max_width=400),
+                tooltip=f"{row['DiseaseName']} ({row['RepidName']})"
+            ).add_to(marker_cluster)
 
         html(m._repr_html_(), height=800, width=1400)
 else:
     st.info("Please select a Repid, Disease, or enter a search term.")
 
+# --- Table view ---
 if selected_table != "Choose options":
     summary_df = load_summary_table(selected_table)
     if summary_df is not None:
