@@ -208,7 +208,7 @@ if final_repids or final_diseases:
                 color=color_map.get(row[name]),
                 fill=True,
                 fill_opacity=0.7,
-                popup= Popup(popup_content, max_width=700)
+                popup= Popup(popup_content, max_width=700),
                 tooltip=tooltip 
             ).add_to(m)
 
