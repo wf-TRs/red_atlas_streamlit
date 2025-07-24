@@ -1,3 +1,4 @@
+
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -9,11 +10,22 @@ import requests
 from load_database import clean_data
 import os
 
-if not os.path.exists("repid.db"):
+st.set_page_config(layout="wide")
+# --- Initialize DB ---
+def database_is_empty():
+    try:
+        conn = sqlite3.connect("repid.db")
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM Repid")
+        count = cur.fetchone()[0]
+        conn.close()
+        return count == 0
+    except:
+        return True
+
+if database_is_empty():
     clean_data()
 
-
-st.set_page_config(layout="wide")
 
 def load_summary_table(table_name):
     tsv_files = {
@@ -24,7 +36,6 @@ def load_summary_table(table_name):
     summary_path = os.path.join(filename)
     if os.path.exists(summary_path):
         return pd.read_csv(summary_path, sep="\t")
-    
 # --- DB Connection ---
 def assign_colors(df,name):
     names = df[name].dropna().unique()
@@ -44,8 +55,7 @@ def show_color_legend(color_map):
     for name, color in color_map.items():
         st.markdown(
             f"<div style='display: flex; align-items: center;'>"
-            f"<div style='width: 15px; height: 15px; background-color: {color}; "
-            f"margin-right: 10px; border: 1px solid #000;'></div>"
+            f"<div style='width: 15px; height: 15px; background-color: {color}; margin-right: 10px; border: 1px solid #000;'></div>"
             f"<span>{name}</span></div>",
             unsafe_allow_html=True
         )
@@ -114,15 +124,12 @@ with col1:
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
+    search_text = st.text_input("Search by typing (use comma):")
+with col4:
     table_options = ["Choose options", "Summary Table", "Population Table"]
     selected_table = st.selectbox("Tables:", table_options, index=0)
-
     
 
-st.markdown("---")
-
-# Text search
-search_text = st.text_input("Or search by typing (use comma to separate multiple values):")
 
 # --- Parse text input ---
 typed_repids = []
@@ -166,8 +173,8 @@ def radius(row):
 
 if final_repids or final_diseases:
     color_map,name, results = get_regions(final_repids, final_diseases)
-    with col3:
-        show_color_legend(color_map)
+   
+    show_color_legend(color_map)
     
 
     if results.empty:
