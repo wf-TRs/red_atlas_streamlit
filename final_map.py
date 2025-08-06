@@ -225,3 +225,14 @@ if selected_table != "Choose options":
         st.dataframe(summary_df, use_container_width=True)
     else:
         st.warning("Selected table not found.")
+
+# --- Reference Section ---
+st.markdown("---")
+st.markdown("### Reference")
+st.markdown(
+    """
+    Indhu Shree Rajan Babu, Readman Chiu, Ben Weisburd, Iris Caglayan, Inanc Birol, Jan M. Friedman.  
+    *Population Genomics of Disease-Associated Tandem Repeat Sequences.*
+    """,
+    unsafe_allow_html=True
+)
