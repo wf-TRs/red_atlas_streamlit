@@ -244,8 +244,21 @@ if view == "table":
 
     df_table.columns = df_table.columns.str.strip()
 
+    # --- NEW: Table Description ---
+    if chosen_title == "Summary Table":
+        st.markdown(
+            """
+            **Table Description**  
+            This table presents detailed summary statistics of disease-associated tandem repeat loci, including allele class and allele frequency percentages across African (AFR), 
+            Admixed American (AMR), East Asian (EAS), European (EUR), and South Asian (SAS) populations.  
+            It summarizes the most frequent repeat copy number per population and its corresponding allele frequency, as well as the observed repeat copy number range. 
+            Additionally, the table quantifies the average proportion of non-canonical bases within repeats and identifies the predominant non-canonical motifs per population, along with their relative frequencies. 
+            All data are derived from the analysis of long-read sequencing datasets from the HPRC, 1kGP-ONT, HGSVC2, and Noyvert et al.
+            """
+        )
+
     # Filters
-    filter_cols = [c for c in ["AlleleClass", "Locus", "Superpopulation", "Population", "Sample"]
+    filter_cols = [c for c in ["Allele Class", "Locus", "Superpopulation Code", "Population Code", "Sample"]
                    if c in df_table.columns]
 
     with st.expander("Filters", expanded=True):
