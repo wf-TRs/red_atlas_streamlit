@@ -132,7 +132,7 @@ with col3:
 with col4:
     st.markdown("**Data Tables**")
     # Vertical native buttons (same-tab)
-    if st.button("Summary Table (summary_all.tsv))", use_container_width=True):
+    if st.button("Summary Table (summary_all.tsv)", use_container_width=True):
         st.query_params.update({"view": "table", "table": "Summary Table"})
         st.rerun()
     if st.button("Per-Haplotype Tandem Repeat Table (all_REDatlas.tsv)", use_container_width=True):
