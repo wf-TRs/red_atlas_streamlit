@@ -130,12 +130,12 @@ with col2:
 with col3:
     search_text = st.text_input("Search by typing (use comma):")
 with col4:
-    st.markdown("**Tables**")
+    st.markdown("**Data Tables**")
     # Vertical native buttons (same-tab)
     if st.button("Summary Table", use_container_width=True):
         st.query_params.update({"view": "table", "table": "Summary Table"})
         st.rerun()
-    if st.button("Population Table", use_container_width=True):
+    if st.button("Per-Haplotype Tandem Repeat Table", use_container_width=True):
         st.query_params.update({"view": "table", "table": "Population Table"})
         st.rerun()
 
@@ -228,10 +228,10 @@ if view == "table":
     tsv_file = table_options[chosen_title]
 
     # Prefer uploaded copies if available
-    if chosen_title == "Summary Table":
+    if chosen_title == "Summary Table (summary_all.tsv)":
         if os.path.exists("/mnt/data/summary_all.tsv"):
             tsv_file = "/mnt/data/summary_all.tsv"
-    elif chosen_title == "Population Table":
+    elif chosen_title == "Population Table (all_REDatlas.tsv)":
         if os.path.exists("/mnt/data/all_REDatlas.tsv"):
             tsv_file = "/mnt/data/all_REDatlas.tsv"
 
@@ -244,25 +244,12 @@ if view == "table":
 
     df_table.columns = df_table.columns.str.strip()
 
-    # --- NEW: Table Description ---
-    if chosen_title == "Summary Table":
-        st.markdown(
-            """
-            **Table Description**  
-            This table presents detailed summary statistics of disease-associated tandem repeat loci, including allele class and allele frequency percentages across African (AFR), 
-            Admixed American (AMR), East Asian (EAS), European (EUR), and South Asian (SAS) populations.  
-            It summarizes the most frequent repeat copy number per population and its corresponding allele frequency, as well as the observed repeat copy number range. 
-            Additionally, the table quantifies the average proportion of non-canonical bases within repeats and identifies the predominant non-canonical motifs per population, along with their relative frequencies. 
-            All data are derived from the analysis of long-read sequencing datasets from the HPRC, 1kGP-ONT, HGSVC2, and Noyvert et al.
-            """
-        )
-
     # Filters
-    filter_cols = [c for c in ["Allele Class", "Locus", "Superpopulation Code", "Population Code", "Sample"]
+    filter_cols = [c for c in ["AlleleClass", "Locus", "Superpopulation", "Population", "Sample"]
                    if c in df_table.columns]
 
     with st.expander("Filters", expanded=True):
-        text_query = st.text_input("Search text (Comma between variables)")
+        text_query = st.text_input("Search text (Comma between variables (e.g., ATXN1,ATXN2))")
 
         selected_filters = {}
         ff_cols = st.multiselect(
@@ -319,8 +306,9 @@ st.markdown("---")
 st.markdown("### Reference")
 st.markdown(
     """
-    Indhu Shree Rajan Babu, Readman Chiu, Ben Weisburd, Iris Caglayan, Inanc Birol, Jan M. Friedman.  
-    *Population Genomics of Disease-Associated Tandem Repeat Sequences.*
+    Indhu-Shree Rajan-Babu, Readman Chiu, Ben Weisburd, Iris Caglayan, Inanc Birol, Jan M. Friedman. 
+    Population-scale disease-associated tandem repeat analysis reveals locus and ancestry-specific insights. 
+    medRxiv 2025.10.11.25337795 (2025). doi: https://doi.org/10.1101/2025.10.11.25337795
     """,
     unsafe_allow_html=True
 )
