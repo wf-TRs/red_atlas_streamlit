@@ -128,7 +128,7 @@ with col1:
 with col2:
     selected_diseases = st.multiselect("Select Disease(s):", sorted(disease_options))
 with col3:
-    search_text = st.text_input("Search by typing (use comma):")
+    search_text = st.text_input("Search by typing Repid (use comma, e.g., ATXN1,ATXN2):")
 with col4:
     st.markdown("**Data Tables**")
     # Vertical native buttons (same-tab)
